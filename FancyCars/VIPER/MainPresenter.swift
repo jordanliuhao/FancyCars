@@ -36,10 +36,10 @@ class MainPresenter {
     private func loadCars() {
         interactor.loadCars()
             .subscribeOn(ConcurrentDispatchQueueScheduler(qos: .background))
-            .map({ cars in
+            .map({ [unowned self] cars in
                 self.carsToViewModel(cars)
             })
-            .map({ carsViewModel in
+            .map({ [unowned self] carsViewModel in
                 if self.sortBy == MainPresenter.sortByName {
                     return carsViewModel.sorted(by: { (car1, car2) -> Bool in
                         return car1.name < car2.name
@@ -48,11 +48,11 @@ class MainPresenter {
                     return carsViewModel
                 }
             })
-            .do(onNext: { carsViewModel in
+            .do(onNext: { [unowned self] carsViewModel in
                 self.carsViewModel = carsViewModel
             })
             .observeOn(MainScheduler())
-            .do(onNext: { carsViewModel in
+            .do(onNext: { [unowned self] carsViewModel in
                 self.view?.showCars(carsViewModel)
             })
             .subscribe()
@@ -67,7 +67,7 @@ class MainPresenter {
         interactor.getCarAvailable(id: carViewModel.id)
             .subscribeOn(ConcurrentDispatchQueueScheduler(qos: .background))
             .observeOn(MainScheduler())
-            .do(onSuccess: { availability in
+            .do(onSuccess: { [unowned self] availability in
                 self.showIfVisibilityChanged(carViewModel: carViewModel, availability: availability)
             })
             .subscribe()
